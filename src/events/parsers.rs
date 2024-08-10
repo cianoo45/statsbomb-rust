@@ -1,3 +1,4 @@
+/// Parser functions for certain fields
 use crate::events::events::{
     Card, EventSubType, EventType, FiftyFifty, FiftyFiftyOutcome, PlayPattern,
 };
@@ -9,6 +10,7 @@ where
     D: Deserializer<'de>,
 {
     let s: EventSubType = Deserialize::deserialize(deserializer)?;
+    // think its ok to unwrap() here as from_str can not return an error
     Ok(EventType::from_str(&s.name).unwrap())
 }
 
@@ -17,6 +19,7 @@ where
     D: Deserializer<'de>,
 {
     let s: EventSubType = Deserialize::deserialize(deserializer)?;
+    // think its ok to unwrap() here as from_str can not return an error
     let parsed: PlayPattern = PlayPattern::from_str(&s.name).unwrap();
 
     Ok(parsed)
@@ -32,6 +35,7 @@ where
         counterpress: Option<bool>,
     }
     let s: Intermediate = Deserialize::deserialize(deserializer)?;
+    // Alternative to implementing from_str
     let outcome: FiftyFiftyOutcome = match s.outcome.name.as_str() {
         "Won" => FiftyFiftyOutcome::Won,
         "Lost" => FiftyFiftyOutcome::Lost,

@@ -6,143 +6,10 @@ use serde_repr::Deserialize_repr;
 use std::ops::Index;
 use std::str::FromStr;
 
+/// Structs for StatsmBomb Events
 #[derive(Deserialize, Debug)]
 pub struct Events {
     pub events: Vec<Event>,
-}
-
-pub struct EventsIter {
-    events: Events,
-    index: usize,
-}
-pub struct RefEventsIter<'a> {
-    events: &'a Events,
-    index: usize,
-}
-
-impl Iterator for EventsIter {
-    type Item = Event;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.events.events.len() {
-            return None;
-        }
-        let result = Some(self.events[self.index].clone());
-        self.index += 1;
-        result
-    }
-}
-
-impl<'a> Iterator for RefEventsIter<'a> {
-    type Item = &'a Event;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.events.events.len() {
-            return None;
-        }
-        let result = Some(&self.events[self.index]);
-        self.index += 1;
-        result
-    }
-}
-
-impl<'a> IntoIterator for &'a Events {
-    type Item = &'a Event;
-    type IntoIter = RefEventsIter<'a>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter {
-            events: &self,
-            index: 0,
-        }
-    }
-}
-
-impl IntoIterator for Events {
-    type Item = Event;
-    type IntoIter = EventsIter;
-
-    fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter {
-            events: self,
-            index: 0,
-        }
-    }
-}
-
-impl Index<usize> for Events {
-    type Output = Event;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.events[index]
-    }
-}
-
-impl Events {
-    pub fn retain(&mut self, event_type: EventType) -> () {
-        self.events.retain(|event| event.event_type == event_type)
-    }
-
-    pub fn filter_by_event_type(&self, event_type: EventType) -> Self {
-        Self {
-            events: self
-                .events
-                .iter()
-                .filter(|event| event.event_type == event_type)
-                .cloned()
-                .collect(),
-        }
-    }
-
-    pub fn filter_by_team(&self, team: &str) -> Self {
-        Self {
-            events: self
-                .events
-                .iter()
-                .filter(|event| event.team.name == team)
-                .cloned()
-                .collect(),
-        }
-    }
-
-    pub fn filter_by_player(&self, player: &str) -> Self {
-        Self {
-            events: self
-                .events
-                .iter()
-                .filter(|event| {
-                    if event.player.is_none() {
-                        return false;
-                    } else {
-                        return event.player.as_ref().unwrap().name == player;
-                    }
-                })
-                .cloned()
-                .collect(),
-        }
-    }
-
-    pub fn filter_by_predicate<F>(&self, predicate: F) -> Self
-    where
-        F: Fn(&Event) -> bool,
-    {
-        Self {
-            events: self
-                .events
-                .iter()
-                .filter(|event| predicate(event))
-                .cloned()
-                .collect(),
-        }
-    }
-
-    pub fn extend(&mut self, other: Self) -> () {
-        self.events.extend(other)
-    }
-
-    pub fn len(&self) -> usize {
-        self.events.len()
-    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -570,4 +437,269 @@ pub struct LineupPlayer {
 pub struct EventSubType {
     pub id: u32,
     pub name: String,
+}
+
+pub struct EventsIter {
+    events: Events,
+    index: usize,
+}
+pub struct RefEventsIter<'a> {
+    events: &'a Events,
+    index: usize,
+}
+
+impl Iterator for EventsIter {
+    type Item = Event;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.events.events.len() {
+            return None;
+        }
+        let result = Some(self.events[self.index].clone());
+        self.index += 1;
+        result
+    }
+}
+
+impl<'a> Iterator for RefEventsIter<'a> {
+    type Item = &'a Event;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.events.events.len() {
+            return None;
+        }
+        let result = Some(&self.events[self.index]);
+        self.index += 1;
+        result
+    }
+}
+
+impl<'a> IntoIterator for &'a Events {
+    type Item = &'a Event;
+    type IntoIter = RefEventsIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter {
+            events: &self,
+            index: 0,
+        }
+    }
+}
+
+impl IntoIterator for Events {
+    type Item = Event;
+    type IntoIter = EventsIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter {
+            events: self,
+            index: 0,
+        }
+    }
+}
+
+impl Index<usize> for Events {
+    type Output = Event;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.events[index]
+    }
+}
+
+impl Events {
+    pub fn retain(&mut self, event_type: EventType) -> () {
+        self.events.retain(|event| event.event_type == event_type)
+    }
+
+    pub fn filter_by_event_type(&self, event_type: EventType) -> Self {
+        Self {
+            events: self
+                .events
+                .iter()
+                .filter(|event| event.event_type == event_type)
+                .cloned()
+                .collect(),
+        }
+    }
+
+    pub fn filter_by_team(&self, team: &str) -> Self {
+        Self {
+            events: self
+                .events
+                .iter()
+                .filter(|event| event.team.name == team)
+                .cloned()
+                .collect(),
+        }
+    }
+
+    // The filter in this seems messy
+    pub fn filter_by_player(&self, player: &str) -> Self {
+        Self {
+            events: self
+                .events
+                .iter()
+                .filter(|event| {
+                    if event.player.is_none() {
+                        return false;
+                    } else {
+                        return event.player.as_ref().unwrap().name == player;
+                    }
+                })
+                .cloned()
+                .collect(),
+        }
+    }
+
+    // Allows both functions and closures
+    pub fn filter_by_predicate<F>(&self, predicate: F) -> Self
+    where
+        F: Fn(&Event) -> bool,
+    {
+        Self {
+            events: self
+                .events
+                .iter()
+                .filter(|event| predicate(event))
+                .cloned()
+                .collect(),
+        }
+    }
+
+    pub fn extend(&mut self, other: Self) -> () {
+        self.events.extend(other)
+    }
+
+    pub fn len(&self) -> usize {
+        self.events.len()
+    }
+}
+
+// This is useful for writing the tests
+impl Default for Event {
+    fn default() -> Self {
+        Self {
+            id: "1".to_string(),
+            index: 1,
+            period: Period::FirstHalf,
+            timestamp: "2020-01-01".to_string(),
+            minute: 1,
+            second: 0,
+            event_type: EventType::HalfStart,
+            possesion: None,
+            possesion_team: None,
+            play_pattern: PlayPattern::FromKickOff,
+            team: EventSubType {
+                id: 1,
+                name: "Default".to_string(),
+            },
+            player: None,
+            position: None,
+            location: None,
+            duration: None,
+            tactics: None,
+            under_pressure: None,
+            out: None,
+            off_camera: None,
+            related_events: None,
+            fifty_fifty: None,
+            bad_behaviour: None,
+            ball_receipt: None,
+            ball_recovery: None,
+            block: None,
+            clearance: None,
+            carry: None,
+            pass: None,
+            duel: None,
+            dribble: None,
+            dribbled_past: None,
+            foul_comitted: None,
+            foul_won: None,
+            goalkeeper: None,
+            half_end: None,
+            half_start: None,
+            injury_stoppage: None,
+            player_off: None,
+            pressure: None,
+            shot: None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn len() {
+        let event1 = Event {
+            id: "1".to_string(),
+            index: 1,
+            period: Period::FirstHalf,
+            ..Default::default()
+        };
+        let event2 = Event {
+            id: "2".to_string(),
+            index: 2,
+            period: Period::SecondHalf,
+            ..Default::default()
+        };
+        let events = Events {
+            events: vec![event1, event2],
+        };
+        assert_eq!(events.len(), 2);
+    }
+
+    #[test]
+    fn filter_by_team() {
+        let event1 = Event {
+            id: "1".to_string(),
+            index: 1,
+            period: Period::FirstHalf,
+            team: EventSubType {
+                id: 1,
+                name: "Arsenal".to_string(),
+            },
+            ..Default::default()
+        };
+        let event2 = Event {
+            id: "2".to_string(),
+            index: 2,
+            period: Period::SecondHalf,
+            team: EventSubType {
+                id: 1,
+                name: "Chelsea".to_string(),
+            },
+            ..Default::default()
+        };
+        let events = Events {
+            events: vec![event1, event2],
+        };
+
+        let filtered_events = events.filter_by_team("Arsenal");
+        assert_eq!(filtered_events.len(), 1);
+    }
+
+    #[test]
+    fn filter_by_predicate() {
+        let event1 = Event {
+            id: "1".to_string(),
+            index: 1,
+            period: Period::FirstHalf,
+            ..Default::default()
+        };
+        let event2 = Event {
+            id: "2".to_string(),
+            index: 2,
+            period: Period::SecondHalf,
+            ..Default::default()
+        };
+        let events = Events {
+            events: vec![event1, event2],
+        };
+
+        let filtered_events =
+            events.filter_by_predicate(|event| matches!(event.period, Period::FirstHalf));
+        assert_eq!(filtered_events.len(), 1);
+    }
 }
